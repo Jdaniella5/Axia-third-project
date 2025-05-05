@@ -11,8 +11,8 @@ exports.register = async (req, res) => {
     try{
         const { username, email, password } = req.body;
         const salt = await bcrypt.genSalt(10);
-        const hashed_password = await bcrypt.hash(password, salt);
-        const newuser = new Useraxia({ username, email, password: hashedPassword });
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+        const newuser = new User({ username, email, password: hashedPassword });
         await newuser.save();
         res.status(201).json ({ message: "Registered sucessfully." });
     } catch (err) {
@@ -24,25 +24,25 @@ exports.register = async (req, res) => {
 exports.login = async (req,res) => {
     try {
         const { email, password } = req.body;
-        const user = await Useraxia.findOne({ email });
+        const user = await User.findOne({ email });
         if(!user) return res.status(400).json({ message: "User not found!" });
-        const aMatch = await bcrypt.compare(password, user.password);
-        if(!aMatch) return res.status(400).json({ message: "Invalid password" });
+        const isMatch = await bcrypt.compare(password, user.password);
+        if(!isMatch) return res.status(400).json({ message: "Invalid password" });
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30 mins" });
-        res.status(200).json({ message: err.message });
+        res.status(200).json({ token, user });
     } catch (err) {
         res.status(500).json({ message: err.message })
     }
 };
 
 //DELETE USERDATA
-exports.delete_user = async (req, res) => {
+exports.deleteUser = async (req, res) => {
     try {
-        const user = await Useraxia.findById(req.user.id);
+        const user = await User.findById(req.user.id);
         if(!user) return res.status(404).json({ message: "USER NOT FOUND!" });
-        await Postaxia.deleteMany({ user: req.user.id });
+        await Post.deleteMany({ user: req.user.id });
         await Kyc.deleteOne({ user: req.user.id });
-        await Useraxia.findByIdAndDelete(req.user.id);
+        await User.findByIdAndDelete(req.user.id);
 
         res.status(200).json({ message: "USER AND DATA DELETED!" })
     } catch (err) {

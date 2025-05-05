@@ -1,5 +1,4 @@
 const Kyc = require("../models/Kyc");
-const kyc = require("../models/Kyc");
 
 exports.createkyc = async (req, res) => {
     try{
